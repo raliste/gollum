@@ -38,6 +38,13 @@ module Precious
       enable :logging, :raise_errors, :dump_errors
     end
 
+    before do
+      @username = (env['HTTP_X_USERNAME'] || ENV['HTTP_X_USERNAME']) or go_to_auth
+      if @username == 'nobody'
+        go_to_auth
+      end
+    end
+
     get '/' do
       show_page_or_file('Home')
     end
@@ -209,7 +216,16 @@ module Precious
     end
 
     def commit_message
-      { :message => params[:message] }
+      if @username
+        { :message => params[:message],
+          :name    => @username }
+      else
+        { :message => params[:message] }
+      end
+    end
+    
+    def go_to_auth
+      redirect 'http://auth.yourcorp.com'
     end
   end
 end
